@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f6f8f4">
+  <title>Barangay West Visoria | Resident Management</title>
+  <style>
+    :root {
+      --ink: #1d3028;
+      --muted: #78857d;
+      --line: #e8ede8;
+      --paper: #fff;
+      --canvas: #f6f8f4;
+      --green: #277353;
+      --green-dark: #1b5c41;
+      --green-light: #eaf4ee;
+      --gold: #d9a84e;
+      --red: #c25252;
+      --shadow: 0 14px 45px rgba(31, 63, 47, .08);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--canvas); min-height: 100vh; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .hidden { display: none !important; }
+    .auth-screen { min-height: 100vh; display: grid; grid-template-columns: minmax(360px, 1fr) minmax(440px, 1fr); background: #fff; }
+    .auth-art { position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 44px 8%; color: white; background: #1e6045; }
+    .auth-art:before, .auth-art:after { content: ""; position: absolute; border: 1px solid rgba(255,255,255,.13); border-radius: 50%; pointer-events: none; }
+    .auth-art:before { width: 650px; height: 650px; right: -200px; bottom: -180px; }
+    .auth-art:after { width: 430px; height: 430px; right: -80px; bottom: -70px; }
+    .brand { display: flex; align-items: center; gap: 13px; position: relative; z-index: 1; }
+    .brand-mark { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 14px; background: rgba(255,255,255,.15); font-size: 23px; }
+    .brand-name { font-size: 15px; font-weight: 750; letter-spacing: .02em; }
+    .brand-sub { opacity: .72; font-size: 11px; margin-top: 3px; letter-spacing: .1em; text-transform: uppercase; }
+    .art-copy { position: relative; z-index: 1; max-width: 530px; margin: auto 0; padding: 50px 0; }
+    .eyebrow { color: #cce4d5; text-transform: uppercase; letter-spacing: .17em; font-weight: 700; font-size: 11px; }
+    .art-copy h1 { font-family: Georgia, serif; font-size: clamp(42px, 5vw, 68px); line-height: 1.03; font-weight: 500; margin: 17px 0 18px; letter-spacing: -.04em; }
+    .art-copy p { max-width: 410px; color: rgba(255,255,255,.77); line-height: 1.8; font-size: 15px; }
+    .art-footer { position: relative; z-index: 1; color: rgba(255,255,255,.65); font-size: 12px; }
+    .auth-main { display: grid; place-items: center; padding: 34px 24px; }
+    .auth-card { width: min(100%, 440px); }
+    .auth-mobile-brand { display: none; }
+    .auth-card h2 { font-size: 28px; letter-spacing: -.04em; margin: 0 0 8px; }
+    .auth-intro { color: var(--muted); font-size: 14px; margin: 0 0 26px; line-height: 1.6; }
+    .auth-tabs { display: flex; padding: 4px; border-radius: 11px; background: #f1f4f1; margin-bottom: 24px; }
+    .auth-tabs button { border: 0; flex: 1; padding: 10px; border-radius: 8px; color: #738078; background: transparent; font-weight: 650; font-size: 13px; }
+    .auth-tabs button.active { color: var(--ink); background: white; box-shadow: 0 2px 8px rgba(31,63,47,.08); }
+    .field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 15px; }
+    .field label { font-size: 12px; font-weight: 700; color: #526158; }
+    .field input, .field select { width: 100%; height: 44px; border: 1px solid #dfe6df; border-radius: 8px; outline: 0; padding: 0 12px; color: var(--ink); background: white; transition: border .18s, box-shadow .18s; }
+    .field input:focus, .field select:focus { border-color: #76a88e; box-shadow: 0 0 0 3px rgba(39,115,83,.1); }
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+    .primary-btn { width: 100%; min-height: 45px; border: 0; border-radius: 8px; background: var(--green); color: white; font-weight: 700; transition: background .18s, transform .18s; }
+    .primary-btn:hover { background: var(--green-dark); transform: translateY(-1px); }
+    .demo-btn { width: 100%; min-height: 43px; margin-top: 11px; border: 1px solid #dce5dd; background: white; color: var(--green-dark); border-radius: 8px; font-weight: 650; }
+    .demo-btn:hover { background: #f7faf7; }
+    .notice { padding: 11px 12px; margin-top: 18px; border-radius: 8px; background: #f6f8f5; color: #738078; font-size: 11px; line-height: 1.6; }
+    .auth-error { color: var(--red); font-size: 12px; min-height: 17px; margin: -4px 0 9px; }
+    .app { min-height: 100vh; }
+    .sidebar { width: 248px; position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; background: #fff; border-right: 1px solid var(--line); padding: 25px 17px 18px; z-index: 5; }
+    .sidebar .brand { padding: 0 8px 28px; }
+    .sidebar .brand-mark { background: var(--green-light); color: var(--green); }
+    .sidebar .brand-name { font-size: 13px; }
+    .sidebar .brand-sub { font-size: 9px; }
+    .nav-label { color: #a0aaa2; font-size: 10px; text-transform: uppercase; letter-spacing: .14em; font-weight: 750; padding: 10px 12px; }
+    .nav-item { border: 0; background: transparent; width: 100%; display: flex; align-items: center; gap: 12px; color: #758179; padding: 11px 12px; border-radius: 8px; font-size: 13px; font-weight: 650; text-align: left; margin: 2px 0; }
+    .nav-item.active, .nav-item:hover { background: var(--green-light); color: var(--green-dark); }
+    .nav-icon { width: 19px; text-align: center; font-size: 16px; }
+    .side-bottom { margin-top: auto; border-top: 1px solid var(--line); padding: 15px 7px 0; }
+    .user-row { display: flex; gap: 10px; align-items: center; padding: 8px 2px 14px; }
+    .avatar { width: 34px; height: 34px; display: grid; place-items: center; flex: none; border-radius: 50%; background: #e7f1e9; color: var(--green); font-weight: 750; font-size: 12px; }
+    .user-name { font-size: 12px; font-weight: 700; max-width: 145px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .user-role { color: #8b968f; font-size: 10px; margin-top: 3px; }
+    .logout-btn { background: transparent; border: 0; color: #758179; padding: 8px 9px; font-size: 12px; width: 100%; text-align: left; border-radius: 7px; }
+    .logout-btn:hover { background: #f5f7f5; color: var(--red); }
+    .main { margin-left: 248px; padding: 0 36px 40px; }
+    .topbar { min-height: 83px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+    .crumb { color: #8b968f; font-size: 12px; }
+    .crumb strong { color: #42544a; font-weight: 650; }
+    .top-date { color: #77837b; font-size: 12px; }
+    .content { max-width: 1240px; margin: 0 auto; }
+    .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin: 30px 0 23px; }
+    .page-heading h1 { margin: 0 0 6px; font-size: 27px; letter-spacing: -.045em; }
+    .page-heading p { margin: 0; color: var(--muted); font-size: 13px; }
+    .add-btn { border: 0; background: var(--green); color: white; padding: 11px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .add-btn:hover { background: var(--green-dark); }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 15px; margin-bottom: 22px; }
+    .stat-card { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 18px; min-height: 119px; }
+    .stat-top { display: flex; align-items: center; justify-content: space-between; color: #758179; font-size: 12px; font-weight: 600; }
+    .stat-icon { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 9px; color: var(--green); background: var(--green-light); font-size: 15px; }
+    .stat-value { font-size: 28px; font-weight: 750; letter-spacing: -.04em; margin-top: 12px; }
+    .stat-caption { color: #9aa39d; font-size: 10px; margin-top: 3px; }
+    .panel { background: white; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    .panel-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 19px; border-bottom: 1px solid var(--line); gap: 14px; }
+    .panel-title { font-weight: 750; font-size: 14px; }
+    .panel-subtitle { color: #8b968f; font-size: 11px; margin-top: 4px; }
+    .tools { display: flex; gap: 9px; align-items: center; }
+    .search { position: relative; }
+    .search span { position: absolute; left: 11px; top: 8px; color: #9ba69e; font-size: 14px; }
+    .search input { width: 222px; height: 35px; border: 1px solid #e1e7e1; border-radius: 7px; outline: 0; padding: 0 10px 0 32px; font-size: 11px; }
+    .search input:focus { border-color: #91b69e; }
+    .filter-select { height: 35px; border: 1px solid #e1e7e1; border-radius: 7px; padding: 0 9px; color: #58665d; background: white; font-size: 11px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
+    th { color: #87928a; background: #fbfcfa; text-transform: uppercase; letter-spacing: .08em; font-size: 9px; font-weight: 750; padding: 12px 15px; }
+    td { padding: 13px 15px; border-top: 1px solid #eff2ef; font-size: 11px; color: #59675e; }
+    tbody tr:hover { background: #fbfcfa; }
+    .resident-name { color: #2b3b32; font-weight: 700; font-size: 11px; }
+    .resident-id { color: #a0a9a2; font-size: 9px; margin-top: 4px; }
+    .status { display: inline-flex; align-items: center; border-radius: 20px; padding: 5px 9px; font-size: 9px; font-weight: 700; }
+    .status.active { color: #327454; background: #e8f4ec; }
+    .status.moved { color: #8b6a2a; background: #fbf2df; }
+    .status.deceased { color: #9a5a5a; background: #faeaea; }
+    .action-btn { color: #77847a; border: 0; background: transparent; border-radius: 5px; padding: 5px 7px; font-size: 11px; }
+    .action-btn:hover { background: #f0f4f0; color: var(--green-dark); }
+    .action-btn.delete:hover { color: var(--red); background: #fff0f0; }
+    .empty { padding: 44px 20px; color: #89958c; text-align: center; font-size: 12px; }
+    .table-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding: 12px 16px; color: #89958c; font-size: 10px; }
+    .modal-backdrop { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 20px; background: rgba(23,42,31,.42); }
+    .modal { width: min(100%, 610px); max-height: 92vh; overflow-y: auto; border-radius: 12px; background: white; box-shadow: 0 25px 75px rgba(15,37,24,.2); }
+    .modal-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 21px 23px 17px; border-bottom: 1px solid var(--line); }
+    .modal-head h2 { margin: 0; font-size: 18px; letter-spacing: -.03em; }
+    .modal-head p { color: #89958c; font-size: 11px; margin: 5px 0 0; }
+    .close-btn { border: 0; background: transparent; color: #809087; font-size: 22px; line-height: 1; }
+    .modal-body { padding: 19px 23px; }
+    .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--green); font-weight: 750; margin: 4px 0 13px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 9px; padding: 14px 23px 20px; border-top: 1px solid var(--line); }
+    .secondary-btn { border: 1px solid #dce5dd; color: #57645b; background: white; border-radius: 7px; padding: 9px 15px; font-size: 12px; font-weight: 650; }
+    .modal-actions .primary-btn { width: auto; min-height: auto; padding: 10px 17px; font-size: 12px; }
+    .toast { position: fixed; z-index: 20; right: 24px; bottom: 24px; padding: 13px 17px; color: white; background: #254f38; box-shadow: var(--shadow); border-radius: 8px; font-size: 12px; opacity: 0; transform: translateY(12px); transition: .22s; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 980px) {
+      .sidebar { width: 210px; }
+      .main { margin-left: 210px; padding-left: 23px; padding-right: 23px; }
+      .stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .search input { width: 170px; }
+    }
+    @media (max-width: 700px) {
+      .auth-screen { display: block; background: var(--canvas); }
+      .auth-art { display: none; }
+      .auth-main { min-height: 100vh; padding: 22px; }
+      .auth-mobile-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 34px; }
+      .auth-mobile-brand .brand-mark { background: var(--green-light); color: var(--green); }
+      .auth-mobile-brand .brand-name { font-size: 13px; }
+      .auth-mobile-brand .brand-sub { font-size: 9px; }
+      .sidebar { width: auto; height: 62px; inset: auto 0 0; flex-direction: row; padding: 6px 9px; border-right: 0; border-top: 1px solid var(--line); justify-content: space-around; }
+      .sidebar .brand, .nav-label, .side-bottom, .nav-item span:not(.nav-icon) { display: none; }
+      .sidebar nav { display: flex; align-items: center; width: 100%; justify-content: space-around; }
+      .nav-item { width: auto; margin: 0; padding: 10px 15px; }
+      .nav-icon { font-size: 19px; }
+      .main { margin-left: 0; padding: 0 16px 80px; }
+      .topbar { min-height: 61px; }
+      .top-date { font-size: 10px; }
+      .page-heading { margin: 23px 0 18px; align-items: flex-start; }
+      .page-heading h1 { font-size: 23px; }
+      .add-btn { padding: 10px 12px; }
+      .stats { gap: 9px; }
+      .stat-card { padding: 13px; min-height: 105px; }
+      .stat-top { font-size: 10px; }
+      .stat-value { font-size: 24px; }
+      .panel-head { align-items: flex-start; flex-direction: column; }
+      .tools { width: 100%; }
+      .search { flex: 1; }
+      .search input { width: 100%; }
+      .filter-select { max-width: 125px; }
+      .field-grid { grid-template-columns: 1fr; }
+      .modal-body { padding: 16px; }
+      .modal-head { padding: 18px 16px 14px; }
+      .modal-actions { padding: 13px 16px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <section id="authScreen" class="auth-screen">
+    <div class="auth-art">
+      <div class="brand"><div class="brand-mark">⌂</div><div><div class="brand-name">Barangay West Visoria</div><div class="brand-sub">Resident Services Portal</div></div></div>
+      <div class="art-copy">
+        <div class="eyebrow">A connected community</div>
+        <h1>Better records.<br>Better service.</h1>
+        <p>A simple, organized way to keep resident information up to date and support the people of West Visoria.</p>
+      </div>
+      <div class="art-footer">Barangay West Visoria · Resident Management System</div>
+    </div>
+    <main class="auth-main">
+      <div class="auth-card">
+        <div class="auth-mobile-brand"><div class="brand-mark">⌂</div><div><div class="brand-name">Barangay West Visoria</div><div class="brand-sub">Resident Services Portal</div></div></div>
+        <h2 id="authTitle">Welcome back</h2>
+        <p class="auth-intro" id="authIntro">Sign in to access the resident management dashboard.</p>
+        <div class="auth-tabs">
+          <button id="loginTab" class="active" type="button">Log in</button>
+          <button id="registerTab" type="button">Register</button>
+        </div>
+        <form id="loginForm">
+          <div class="field"><label for="loginEmail">Email address</label><input id="loginEmail" type="email" autocomplete="username" required placeholder="you@example.com"></div>
+          <div class="field"><label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Enter your password"></div>
+          <div id="loginError" class="auth-error" role="alert"></div>
+          <button class="primary-btn" type="submit">Log in to dashboard</button>
+          <button id="demoButton" class="demo-btn" type="button">Explore with sample data</button>
+        </form>
+        <form id="registerForm" class="hidden">
+          <div class="field"><label for="regName">Full name</label><input id="regName" required maxlength="100" autocomplete="name" placeholder="Your full name"></div>
+          <div class="field"><label for="regEmail">Email address</label><input id="regEmail" type="email" required autocomplete="email" placeholder="you@example.com"></div>
+          <div class="field"><label for="regPassword">Create password</label><input id="regPassword" type="password" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters"></div>
+          <div id="registerError" class="auth-error" role="alert"></div>
+          <button class="primary-btn" type="submit">Create account</button>
+        </form>
+        <div class="notice">Prototype notice: records are saved only in this browser on this device. This demo has no server, shared database, or production-grade authentication. Do not enter real or sensitive resident information.</div>
+      </div>
+    </main>
+  </section>
+
+  <div id="app" class="app hidden">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">⌂</div><div><div class="brand-name">Barangay West Visoria</div><div class="brand-sub">Resident Services</div></div></div>
+      <div class="nav-label">Workspace</div>
+      <nav>
+        <button class="nav-item active" type="button"><span class="nav-icon">▦</span><span>Overview</span></button>
+        <button id="residentsNav" class="nav-item" type="button"><span class="nav-icon">♙</span><span>Residents</span></button>
+      </nav>
+      <div class="side-bottom">
+        <div class="user-row"><div id="userAvatar" class="avatar">WV</div><div><div id="userName" class="user-name">User</div><div class="user-role">Barangay account</div></div></div>
+        <button id="logoutButton" class="logout-btn" type="button">↪ &nbsp; Log out</button>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div class="crumb">Workspace &nbsp; / &nbsp; <strong>Overview</strong></div><div id="todayLabel" class="top-date"></div></header>
+      <div class="content">
+        <section class="page-heading">
+          <div><h1>Community overview</h1><p>Here's what's happening in Barangay West Visoria.</p></div>
+          <button id="addResidentButton" class="add-btn" type="button">＋ &nbsp; Add resident</button>
+        </section>
+        <section class="stats" aria-label="Resident statistics">
+          <article class="stat-card"><div class="stat-top"><span>Total residents</span><span class="stat-icon">♙</span></div><div id="totalResidents" class="stat-value">0</div><div class="stat-caption">Resident records</div></article>
+          <article class="stat-card"><div class="stat-top"><span>Households</span><span class="stat-icon">⌂</span></div><div id="totalHouseholds" class="stat-value">0</div><div class="stat-caption">Unique household groups</div></article>
+          <article class="stat-card"><div class="stat-top"><span>Senior citizens</span><span class="stat-icon">♡</span></div><div id="totalSeniors" class="stat-value">0</div><div class="stat-caption">Residents aged 60 and above</div></article>
+          <article class="stat-card"><div class="stat-top"><span>Registered voters</span><span class="stat-icon">✓</span></div><div id="totalVoters" class="stat-value">0</div><div class="stat-caption">Registered voter records</div></article>
+        </section>
+        <section id="residentSection" class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title">Resident records</div><div class="panel-subtitle">Manage and update your community directory</div></div>
+            <div class="tools">
+              <label class="search"><span>⌕</span><input id="searchInput" type="search" placeholder="Search residents..." aria-label="Search residents"></label>
+              <select id="statusFilter" class="filter-select" aria-label="Filter by status"><option value="">All statuses</option><option>Active</option><option>Moved</option><option>Deceased</option></select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Resident</th><th>Contact</th><th>Address</th><th>Household</th><th>Voter</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="residentRows"></tbody>
+            </table>
+            <div id="emptyState" class="empty hidden">No residents found. Add a resident to get started.</div>
+          </div>
+          <div class="table-footer"><span id="recordCount">Showing 0 residents</span><span>West Visoria Resident Registry</span></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div id="residentModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <form id="residentForm" class="modal">
+      <div class="modal-head"><div><h2 id="modalTitle">Add resident</h2><p>Enter the resident's information below.</p></div><button id="closeModal" class="close-btn" type="button" aria-label="Close">×</button></div>
+      <div class="modal-body">
+        <div class="section-label">Personal information</div>
+        <div class="field-grid">
+          <div class="field"><label for="residentName">Full name *</label><input id="residentName" required maxlength="100" placeholder="First and last name"></div>
+          <div class="field"><label for="birthDate">Date of birth *</label><input id="birthDate" type="date" required></div>
+          <div class="field"><label for="residentPhone">Contact number</label><input id="residentPhone" type="tel" maxlength="30" placeholder="e.g. 09XX XXX XXXX"></div>
+          <div class="field"><label for="residentEmail">Email address</label><input id="residentEmail" type="email" maxlength="120" placeholder="Optional"></div>
+        </div>
+        <div class="section-label">Address & registration</div>
+        <div class="field-grid">
+          <div class="field"><label for="residentAddress">Address *</label><input id="residentAddress" required maxlength="160" placeholder="Street, purok, or sitio"></div>
+          <div class="field"><label for="household">Household / household ID *</label><input id="household" required maxlength="80" placeholder="e.g. Purok 1 - Santos"></div>
+          <div class="field"><label for="voterStatus">Registered voter</label><select id="voterStatus"><option value="No">No</option><option value="Yes">Yes</option></select></div>
+          <div class="field"><label for="residentStatus">Resident status</label><select id="residentStatus"><option>Active</option><option>Moved</option><option>Deceased</option></select></div>
+        </div>
+        <div id="formError" class="auth-error" role="alert"></div>
+      </div>
+      <div class="modal-actions"><button id="cancelModal" class="secondary-btn" type="button">Cancel</button><button class="primary-btn" type="submit">Save resident</button></div>
+    </form>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      "use strict";
+      const RESIDENTS_KEY = "westVisoriaResidents";
+      const ACCOUNTS_KEY = "westVisoriaAccounts";
+      const SESSION_KEY = "westVisoriaSession";
+      const SAMPLE_KEY = "westVisoriaSampleLoaded";
+      const $ = (id) => document.getElementById(id);
+      let residents = [];
+      let editingId = null;
+      let toastTimer;
+
+      const sampleResidents = [
+        { id: "WV-1001", name: "Maria Santos", birthDate: "1958-04-12", phone: "0917 234 1088", email: "maria.sample@example.com", address: "Purok 1, West Visoria", household: "Purok 1 - Santos", voter: "Yes", status: "Active" },
+        { id: "WV-1002", name: "Jose Dela Cruz", birthDate: "1979-09-03", phone: "0928 614 2071", email: "jose.sample@example.com", address: "Purok 2, West Visoria", household: "Purok 2 - Dela Cruz", voter: "Yes", status: "Active" },
+        { id: "WV-1003", name: "Ana Reyes", birthDate: "1992-01-25", phone: "0995 130 4452", email: "ana.sample@example.com", address: "Purok 1, West Visoria", household: "Purok 1 - Santos", voter: "No", status: "Active" },
+        { id: "WV-1004", name: "Ramon Garcia", birthDate: "1951-07-16", phone: "0918 772 2904", email: "", address: "Purok 3, West Visoria", household: "Purok 3 - Garcia", voter: "Yes", status: "Active" },
+        { id: "WV-1005", name: "Liza Mendoza", birthDate: "1987-11-08", phone: "0920 625 8301", email: "", address: "Purok 4, West Visoria", household: "Purok 4 - Mendoza", voter: "No", status: "Moved" },
+        { id: "WV-1006", name: "Pedro Aquino", birthDate: "1964-02-19", phone: "0916 409 1182", email: "pedro.sample@example.com", address: "Purok 2, West Visoria", household: "Purok 2 - Dela Cruz", voter: "Yes", status: "Active" }
+      ];
+
+      function readStorage(key, fallback) {
+        try {
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : fallback;
+        } catch (error) {
+          console.error("Unable to read browser storage.", error);
+          return fallback;
+        }
+      }
+      function saveResidents() {
+        try { localStorage.setItem(RESIDENTS_KEY, JSON.stringify(residents)); }
+        catch (error) {
+          console.error("Unable to save resident records.", error);
+          showToast("Could not save records. Check browser storage.");
+          return false;
+        }
+        return true;
+      }
+      function makeId() {
+        return "WV-" + Date.now().toString().slice(-6) + Math.floor(Math.random() * 90 + 10);
+      }
+      function ageFrom(date) {
+        if (!date) return null;
+        const born = new Date(date + "T00:00:00");
+        if (Number.isNaN(born.getTime())) return null;
+        const now = new Date();
+        let age = now.getFullYear() - born.getFullYear();
+        if (now.getMonth() < born.getMonth() || (now.getMonth() === born.getMonth() && now.getDate() < born.getDate())) age--;
+        return age;
+      }
+      function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+      }
+      function showToast(message) {
+        const toast = $("toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+      }
+      function render() {
+        const query = $("searchInput").value.trim().toLowerCase();
+        const status = $("statusFilter").value;
+        const filtered = residents.filter((person) => {
+          const matches = [person.name, person.phone, person.email, person.address, person.household, person.id].some((value) => String(value || "").toLowerCase().includes(query));
+          return matches && (!status || person.status === status);
+        });
+        $("totalResidents").textContent = residents.length;
+        $("totalHouseholds").textContent = new Set(residents.map((person) => person.household.trim().toLowerCase()).filter(Boolean)).size;
+        $("totalSeniors").textContent = residents.filter((person) => ageFrom(person.birthDate) >= 60 && person.status === "Active").length;
+        $("totalVoters").textContent = residents.filter((person) => person.voter === "Yes" && person.status === "Active").length;
+        $("residentRows").innerHTML = filtered.map((person) => `
+          <tr>
+            <td><div class="resident-name">${escapeHtml(person.name)}</div><div class="resident-id">${escapeHtml(person.id)} · ${ageFrom(person.birthDate) ?? "—"} yrs</div></td>
+            <td>${escapeHtml(person.phone || "—")}<div class="resident-id">${escapeHtml(person.email || "")}</div></td>
+            <td>${escapeHtml(person.address)}</td>
+            <td>${escapeHtml(person.household)}</td>
+            <td>${person.voter === "Yes" ? "Yes" : "No"}</td>
+            <td><span class="status ${String(person.status).toLowerCase()}">${escapeHtml(person.status)}</span></td>
+            <td><button class="action-btn" type="button" data-action="edit" data-id="${escapeHtml(person.id)}" aria-label="Edit ${escapeHtml(person.name)}">Edit</button><button class="action-btn delete" type="button" data-action="delete" data-id="${escapeHtml(person.id)}" aria-label="Delete ${escapeHtml(person.name)}">Delete</button></td>
+          </tr>`).join("");
+        $("emptyState").classList.toggle("hidden", filtered.length > 0);
+        $("recordCount").textContent = `Showing ${filtered.length} of ${residents.length} resident${residents.length === 1 ? "" : "s"}`;
+      }
+      function switchAuth(mode) {
+        const registering = mode === "register";
+        $("loginForm").classList.toggle("hidden", registering);
+        $("registerForm").classList.toggle("hidden", !registering);
+        $("loginTab").classList.toggle("active", !registering);
+        $("registerTab").classList.toggle("active", registering);
+        $("authTitle").textContent = registering ? "Create your account" : "Welcome back";
+        $("authIntro").textContent = registering ? "Register to access the resident management dashboard." : "Sign in to access the resident management dashboard.";
+        $("loginError").textContent = "";
+        $("registerError").textContent = "";
+      }
+      function enterApp(name) {
+        localStorage.setItem(SESSION_KEY, name);
+        $("authScreen").classList.add("hidden");
+        $("app").classList.remove("hidden");
+        $("userName").textContent = name || "Barangay user";
+        $("userAvatar").textContent = (name || "WV").split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+        $("todayLabel").textContent = new Intl.DateTimeFormat("en-PH", { dateStyle: "medium" }).format(new Date());
+        residents = readStorage(RESIDENTS_KEY, []);
+        if (!Array.isArray(residents)) residents = [];
+        render();
+      }
+      async function hashPassword(password) {
+        if (!window.crypto || !window.crypto.subtle) throw new Error("Secure password hashing is unavailable. Open this page in a modern browser using localhost or HTTPS.");
+        const bytes = new TextEncoder().encode(password);
+        const digest = await window.crypto.subtle.digest("SHA-256", bytes);
+        return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+      }
+      function openModal(person) {
+        editingId = person ? person.id : null;
+        $("residentForm").reset();
+        $("formError").textContent = "";
+        $("modalTitle").textContent = person ? "Edit resident" : "Add resident";
+        $("residentForm").querySelector(".modal-actions .primary-btn").textContent = person ? "Save changes" : "Save resident";
+        if (person) {
+          $("residentName").value = person.name;
+          $("birthDate").value = person.birthDate;
+          $("residentPhone").value = person.phone || "";
+          $("residentEmail").value = person.email || "";
+          $("residentAddress").value = person.address;
+          $("household").value = person.household;
+          $("voterStatus").value = person.voter;
+          $("residentStatus").value = person.status;
+        }
+        $("residentModal").classList.remove("hidden");
+        $("residentName").focus();
+      }
+      function closeModal() { $("residentModal").classList.add("hidden"); }
+
+      $("loginTab").addEventListener("click", () => switchAuth("login"));
+      $("registerTab").addEventListener("click", () => switchAuth("register"));
+      $("loginForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        $("loginError").textContent = "";
+        try {
+          const email = $("loginEmail").value.trim().toLowerCase();
+          const passwordHash = await hashPassword($("loginPassword").value);
+          const accounts = readStorage(ACCOUNTS_KEY, []);
+          const account = accounts.find((item) => item.email === email && item.passwordHash === passwordHash);
+          if (!account) { $("loginError").textContent = "Email or password is incorrect."; return; }
+          enterApp(account.name);
+        } catch (error) {
+          $("loginError").textContent = error.message || "Unable to sign in.";
+        }
+      });
+      $("registerForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        $("registerError").textContent = "";
+        const name = $("regName").value.trim();
+        const email = $("regEmail").value.trim().toLowerCase();
+        const password = $("regPassword").value;
+        if (password.length < 6) { $("registerError").textContent = "Use a password with at least 6 characters."; return; }
+        try {
+          const accounts = readStorage(ACCOUNTS_KEY, []);
+          if (accounts.some((account) => account.email === email)) { $("registerError").textContent = "An account with that email already exists. Please log in."; return; }
+          accounts.push({ name, email, passwordHash: await hashPassword(password) });
+          localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+          enterApp(name);
+          showToast("Your account is ready.");
+        } catch (error) {
+          console.error("Unable to register account.", error);
+          $("registerError").textContent = error.message || "Unable to create account. Check browser storage.";
+        }
+      });
+      $("demoButton").addEventListener("click", () => {
+        if (!localStorage.getItem(SAMPLE_KEY)) {
+          residents = sampleResidents.slice();
+          if (!saveResidents()) return;
+          localStorage.setItem(SAMPLE_KEY, "true");
+        }
+        enterApp("Demo User");
+        showToast("Sample dashboard loaded. Records are editable.");
+      });
+      $("logoutButton").addEventListener("click", () => {
+        localStorage.removeItem(SESSION_KEY);
+        $("app").classList.add("hidden");
+        $("authScreen").classList.remove("hidden");
+        $("loginPassword").value = "";
+      });
+      $("addResidentButton").addEventListener("click", () => openModal(null));
+      $("closeModal").addEventListener("click", closeModal);
+      $("cancelModal").addEventListener("click", closeModal);
+      $("residentModal").addEventListener("click", (event) => { if (event.target === $("residentModal")) closeModal(); });
+      document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeModal(); });
+      $("searchInput").addEventListener("input", render);
+      $("statusFilter").addEventListener("change", render);
+      $("residentsNav").addEventListener("click", () => $("residentSection").scrollIntoView({ behavior: "smooth" }));
+      $("residentRows").addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-action]");
+        if (!button) return;
+        const person = residents.find((item) => item.id === button.dataset.id);
+        if (!person) return;
+        if (button.dataset.action === "edit") openModal(person);
+        if (button.dataset.action === "delete" && window.confirm(`Delete the resident record for ${person.name}? This cannot be undone.`)) {
+          residents = residents.filter((item) => item.id !== person.id);
+          if (saveResidents()) { render(); showToast("Resident record deleted."); }
+        }
+      });
+      $("residentForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        $("formError").textContent = "";
+        const birthDate = $("birthDate").value;
+        if (birthDate > new Date().toISOString().slice(0, 10)) { $("formError").textContent = "Date of birth cannot be in the future."; return; }
+        const person = {
+          id: editingId || makeId(),
+          name: $("residentName").value.trim(),
+          birthDate,
+          phone: $("residentPhone").value.trim(),
+          email: $("residentEmail").value.trim(),
+          address: $("residentAddress").value.trim(),
+          household: $("household").value.trim(),
+          voter: $("voterStatus").value,
+          status: $("residentStatus").value
+        };
+        if (!person.name || !person.address || !person.household) { $("formError").textContent = "Please complete all required fields."; return; }
+        if (editingId) residents = residents.map((item) => item.id === editingId ? person : item);
+        else residents.unshift(person);
+        if (saveResidents()) {
+          closeModal();
+          render();
+          showToast(editingId ? "Resident record updated." : "Resident added successfully.");
+        }
+      });
+
+      const activeSession = localStorage.getItem(SESSION_KEY);
+      if (activeSession) enterApp(activeSession);
+    })();
+  </script>
+</body>
+</html>
